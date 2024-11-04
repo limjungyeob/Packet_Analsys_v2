@@ -150,7 +150,7 @@ BOOL CPacketAnalsysv2Dlg::OnInitDialog()
 	SetIcon(m_hIcon, FALSE);		// 작은 아이콘을 설정합니다.
 
 	// TODO: 여기에 추가 초기화 작업을 추가합니다.
-	// CListCtrl 초기화 - 열(Column) 추가
+	//열 추가
 	m_listCtrl.InsertColumn(0, _T("No."), LVCFMT_LEFT, 50);
 	m_listCtrl.InsertColumn(1, _T("Time"), LVCFMT_LEFT, 150);
 	m_listCtrl.InsertColumn(2, _T("Source IP"), LVCFMT_LEFT, 150);
@@ -158,7 +158,6 @@ BOOL CPacketAnalsysv2Dlg::OnInitDialog()
 	m_listCtrl.InsertColumn(4, _T("Protocol"), LVCFMT_LEFT, 100);
 	m_listCtrl.InsertColumn(5, _T("Length"), LVCFMT_LEFT, 100);
 	m_listCtrl.InsertColumn(6, _T("Info"), LVCFMT_LEFT, 300);
-	// 선택 모드 설정 (옵션)
 	m_listCtrl.SetExtendedStyle(LVS_EX_FULLROWSELECT | LVS_EX_GRIDLINES);	//리스트 스타일
 	m_bAutoScroll = true; // 자동 스크롤 활성화
 	UpdateCaptureButtonState();
