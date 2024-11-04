@@ -114,6 +114,7 @@ BEGIN_MESSAGE_MAP(CPacketAnalsysv2Dlg, CDialogEx)
 	ON_BN_CLICKED(IDC_STOP_BUTTON, &CPacketAnalsysv2Dlg::OnBnClickedStopButton)
 	ON_EN_CHANGE(IDC_PACKET_DETAILS, &CPacketAnalsysv2Dlg::OnEnChangePacketDetails)
 	ON_BN_CLICKED(IDC_CONNECT_BUTTON, &CPacketAnalsysv2Dlg::OnBnClickedConnectButton)
+	/*ON_WM_TIMER()*/
 END_MESSAGE_MAP()
 
 
@@ -231,6 +232,7 @@ void CPacketAnalsysv2Dlg::OnLvnItemchangedList1(NMHDR* pNMHDR, LRESULT* pResult)
 		const tcp_header* tcpHeader = reinterpret_cast<const tcp_header*>(pkt_data + 14 + (ipHeader->ip_header_len * 4));	//이더넷 헤더 + IP 헤더의 끝 앞에 위치.
 		//이더넷 헤더와 IP 헤더, TCP헤더는 고정된 바이너리 포맷을 가지고있어 구조체 필드 순서와 일치하면 해당 위치의 데이터를 해석할수있음.
 		// Ethernet 헤더 파싱 및 출력
+		//ntohs 타입필드의 값을 읽어올때 읽기 쉽게 변환.
 		CString ethernetDetails;
 		ethernetDetails.Format(_T("Ethernet Header:\r\n")
 			_T(" - Source MAC: %02X:%02X:%02X:%02X:%02X:%02X\r\n")
@@ -251,7 +253,8 @@ void CPacketAnalsysv2Dlg::OnLvnItemchangedList1(NMHDR* pNMHDR, LRESULT* pResult)
 		inet_ntop(AF_INET, &(ipHeader->ip_srcaddr), srcIPStr, INET_ADDRSTRLEN);
 		inet_ntop(AF_INET, &(ipHeader->ip_destaddr), destIPStr, INET_ADDRSTRLEN);
 
-		//ntohs(네트워크 바이트 순서에서 호스트 바이트 순서로 변환)
+		//ntohs(네트워크 바이트 순서에서 호스트 바이트 순서로 변환) network -> host 
+		//ntohl(Netwrok to Host Long) acknowledge,sequence 필드를 올바르게 읽기 위해 변환.
 		CString ipDetails;
 		ipDetails.Format(_T("IP Header:\r\n")
 			_T(" - Version: %d\r\n")
@@ -318,11 +321,13 @@ void CPacketAnalsysv2Dlg::OnBnClickedStopButton()
 	//캡처 중지 버튼 클릭
 	if (m_bCapturing && m_pCaptureThread != nullptr)
 	{
+		TRACE(_T("OnBnClickedStopButton call"));
 		m_bCapturing = FALSE; // 캡처 중지 신호
 
 		// 비동기적으로 스레드가 종료되었는지 확인
 		if (WaitForSingleObject(m_pCaptureThread->m_hThread, 0) == WAIT_OBJECT_0)
 		{
+			TRACE(_T("스레드가 이미 종료됨l"));
 			// 스레드가 이미 종료됨
 			delete m_pCaptureThread;
 			m_pCaptureThread = nullptr;
@@ -330,8 +335,9 @@ void CPacketAnalsysv2Dlg::OnBnClickedStopButton()
 		}
 		else
 		{
+			TRACE(_T("OnBnClickedStopButton #setTimer"));
 			// 스레드가 아직 종료되지 않았으면 UI 응답을 유지하면서 스레드가 종료되도록 대기
-			SetTimer(1, 100, nullptr); // 1번 타이머를 설정하여 일정 시간마다 종료 확인
+			SetTimer(1, 1000, nullptr); // 1번 타이머를 설정하여 일정 시간마다 종료 확인
 		}
 		//EnableWindow(FALSE); //UI 비활성화(중지 버튼 클릭 시 다른 입력 방지)
 
@@ -487,6 +493,7 @@ UINT CPacketAnalsysv2Dlg::CaptureThreadFunc(LPVOID pParam)
 			break;
 		}
 	}
+	TRACE(_T("Thread ending normally.\n"));
 	// 자원해제
 	pcap_close(handle);
 	pcap_freealldevs(alldevs);
@@ -496,10 +503,13 @@ UINT CPacketAnalsysv2Dlg::CaptureThreadFunc(LPVOID pParam)
 // 타이머 이벤트 핸들러 추가
 void CPacketAnalsysv2Dlg::OnTimer(UINT_PTR nIDEvent)
 {
+	TRACE(_T("OnTimer call"));
 	if (nIDEvent == 1 && m_pCaptureThread != nullptr)
 	{
-		if (WaitForSingleObject(m_pCaptureThread->m_hThread, 0) == WAIT_OBJECT_0)
+		TRACE(_T("OnTimer call#1"));
+		if (WaitForSingleObject(m_pCaptureThread->m_hThread, 500) == WAIT_OBJECT_0)
 		{
+			TRACE(_T("OnTimer#WaitForSingleObject call"));
 			// 스레드가 종료됨
 			delete m_pCaptureThread;
 			m_pCaptureThread = nullptr;
