@@ -39,8 +39,14 @@ public:
 	afx_msg void OnBnClickedCaptureButton();
 	afx_msg void OnBnClickedStopButton();
 	afx_msg void OnEnChangePacketDetails();
+	afx_msg void OnBnClickedConnectButton();
 	void AddPacketToList(int packetNum, const struct pcap_pkthdr* header, const u_char* pkt_data);
 	CEdit m_editPacketDetails;
+	CEdit m_editPacketHexDump;
+	CString m_selectedInterface;
+	void UpdateCaptureButtonState();
+
+	
 
 private:
 	CWinThread* m_pCaptureThread; // 캡처 쓰레드 포인터
@@ -48,6 +54,5 @@ private:
 	bool m_bAutoScroll; // 자동 스크롤 여부
 	static UINT CaptureThreadFunc(LPVOID pParam); // 쓰레드 함수
 	std::vector<std::vector<u_char>> m_packetStorage;
-public:
-	CEdit m_editPacketHexDump;
+	
 };

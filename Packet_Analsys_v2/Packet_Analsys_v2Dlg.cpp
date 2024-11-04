@@ -10,6 +10,7 @@
 #include <winsock2.h>	//네트워크 관련함수
 #include <Ws2tcpip.h>	//IP 주소 관련 함수
 #pragma comment(lib, "Ws2_32.lib")	//Ws2_32 라이브러리 링크
+#include "CNetworkInterfaceDlg.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -112,6 +113,7 @@ BEGIN_MESSAGE_MAP(CPacketAnalsysv2Dlg, CDialogEx)
 	ON_BN_CLICKED(IDC_CAPTURE_BUTTON, &CPacketAnalsysv2Dlg::OnBnClickedCaptureButton)
 	ON_BN_CLICKED(IDC_STOP_BUTTON, &CPacketAnalsysv2Dlg::OnBnClickedStopButton)
 	ON_EN_CHANGE(IDC_PACKET_DETAILS, &CPacketAnalsysv2Dlg::OnEnChangePacketDetails)
+	ON_BN_CLICKED(IDC_CONNECT_BUTTON, &CPacketAnalsysv2Dlg::OnBnClickedConnectButton)
 END_MESSAGE_MAP()
 
 
@@ -158,6 +160,7 @@ BOOL CPacketAnalsysv2Dlg::OnInitDialog()
 	// 선택 모드 설정 (옵션)
 	m_listCtrl.SetExtendedStyle(LVS_EX_FULLROWSELECT | LVS_EX_GRIDLINES);	//리스트 스타일
 	m_bAutoScroll = true; // 자동 스크롤 활성화
+	UpdateCaptureButtonState();
 	return TRUE;  // 포커스를 컨트롤에 설정하지 않으면 TRUE를 반환합니다.
 }
 
@@ -445,8 +448,9 @@ UINT CPacketAnalsysv2Dlg::CaptureThreadFunc(LPVOID pParam)
 		return 1;
 	}
 	//특정 디바이스 연결(ex 현재 이더넷 연결된 네트워크 인터페이스 이름)
+	//"\\Device\\NPF_{B0AFD485-E0B1-45F1-A9E5-C7B445D9F92E}"
 	for (pcap_if_t* d = alldevs; d != nullptr; d = d->next) {
-		if (CString(d->name) == _T("\\Device\\NPF_{B0AFD485-E0B1-45F1-A9E5-C7B445D9F92E}")) {
+		if (CString(d->name) == (pDlg->m_selectedInterface)) {
 			device = d;
 			break;
 		}
@@ -544,4 +548,31 @@ void CPacketAnalsysv2Dlg::DisplayHexDump(const u_char* pkt_data, int len)
 	}
 
 	m_editPacketHexDump.SetWindowText(hexDump);
+}
+
+
+void CPacketAnalsysv2Dlg::OnBnClickedConnectButton()
+{
+	// TODO: 여기에 컨트롤 알림 처리기 코드를 추가합니다.
+	// 네트워크 인터페이스 선택 다이얼로그 생성
+	CNetworkInterfaceDlg interfaceDlg;
+	// 다이얼로그 표시, 사용자가 OK 버튼을 눌렀을 때 계속 진행
+	if (interfaceDlg.DoModal() == IDOK) {
+		// 네트워크 인터페이스 선택 후 처리
+		m_selectedInterface = interfaceDlg.GetSelectedInterface();
+		TRACE(_T("Value of x: %s\n"), m_selectedInterface);
+		if (!m_selectedInterface.IsEmpty()) {
+			AfxMessageBox(_T("네트워크 인터페이스가 선택되었습니다."));
+		}
+		else {
+			AfxMessageBox(_T("선택한 네트워크 인터페이스가 없습니다."));
+		}
+		UpdateCaptureButtonState();
+	}
+}
+
+void CPacketAnalsysv2Dlg::UpdateCaptureButtonState() {
+	BOOL enableCaptureButton = !m_selectedInterface.IsEmpty();
+	TRACE(_T("Boolean value: %s\n"), enableCaptureButton ? _T("TRUE") : _T("FALSE"));
+	GetDlgItem(IDC_CAPTURE_BUTTON)->EnableWindow(enableCaptureButton);
 }
