@@ -109,6 +109,7 @@ BEGIN_MESSAGE_MAP(CPacketAnalsysv2Dlg, CDialogEx)
 	ON_WM_SYSCOMMAND()
 	ON_WM_PAINT()
 	ON_WM_QUERYDRAGICON()
+	//리스트 선택 시 onLvnItemChanged 호출
 	ON_NOTIFY(LVN_ITEMCHANGED, IDC_LIST1, &CPacketAnalsysv2Dlg::OnLvnItemchangedList1)
 	ON_BN_CLICKED(IDC_CAPTURE_BUTTON, &CPacketAnalsysv2Dlg::OnBnClickedCaptureButton)
 	ON_BN_CLICKED(IDC_STOP_BUTTON, &CPacketAnalsysv2Dlg::OnBnClickedStopButton)
@@ -248,7 +249,7 @@ void CPacketAnalsysv2Dlg::OnLvnItemchangedList1(NMHDR* pNMHDR, LRESULT* pResult)
 		//srcIPStr과 destIPStr은 변환된 IP주소를 저장할 버퍼.
 		char srcIPStr[INET_ADDRSTRLEN];
 		char destIPStr[INET_ADDRSTRLEN];
-		//inet_ntop함수를 사용하여 ip_srcaddr,up_destaddr에 저장된 IP 주소를 사람이 읽을 수 있는 심진수 형식으로 변환하여 srcIPStr, destIPStr에 저장.
+		//inet_ntop함수를 사용하여 ip_srcaddr,up_destaddr에 저장된 IP 주소를 사람이 읽을 수 있는 십진수 형식으로 변환하여 srcIPStr, destIPStr에 저장.
 		inet_ntop(AF_INET, &(ipHeader->ip_srcaddr), srcIPStr, INET_ADDRSTRLEN);
 		inet_ntop(AF_INET, &(ipHeader->ip_destaddr), destIPStr, INET_ADDRSTRLEN);
 
@@ -324,7 +325,7 @@ void CPacketAnalsysv2Dlg::OnBnClickedStopButton()
 		m_bCapturing = FALSE; // 캡처 중지 신호
 
 		// 비동기적으로 스레드가 종료되었는지 확인
-		if (WaitForSingleObject(m_pCaptureThread->m_hThread, 0) == WAIT_OBJECT_0)
+		if (WaitForSingleObject(m_pCaptureThread->m_hThread, 100) == WAIT_OBJECT_0)
 		{
 			TRACE(_T("스레드가 이미 종료됨l"));
 			// 스레드가 이미 종료됨
@@ -336,7 +337,7 @@ void CPacketAnalsysv2Dlg::OnBnClickedStopButton()
 		{
 			TRACE(_T("OnBnClickedStopButton #setTimer"));
 			// 스레드가 아직 종료되지 않았으면 UI 응답을 유지하면서 스레드가 종료되도록 대기
-			SetTimer(1, 1000, nullptr); // 1번 타이머를 설정하여 일정 시간마다 종료 확인
+			SetTimer(1, 500, nullptr); // 1번 타이머를 설정하여 일정 시간마다 종료 확인
 		}
 		//EnableWindow(FALSE); //UI 비활성화(중지 버튼 클릭 시 다른 입력 방지)
 
@@ -513,7 +514,6 @@ void CPacketAnalsysv2Dlg::OnTimer(UINT_PTR nIDEvent)
 			delete m_pCaptureThread;
 			m_pCaptureThread = nullptr;
 			KillTimer(1); // 타이머 정지
-			AfxMessageBox(_T("Capture stopped."));
 		}
 	}
 
