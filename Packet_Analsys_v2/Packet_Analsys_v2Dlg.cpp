@@ -400,6 +400,9 @@ void CPacketAnalsysv2Dlg::AddPacketToList(int packetNum, const struct pcap_pkthd
 	case 1:
 		protocol = _T("ICMP");
 		break;
+	case 2:
+		protocol = _T("IGMP");
+		break;
 	default:
 		protocol.Format(_T("Unknown (%d)"), ipHeader->ip_protocol);
 		break;
