@@ -331,7 +331,6 @@ void CPacketAnalsysv2Dlg::OnBnClickedStopButton()
 			// 스레드가 이미 종료됨
 			delete m_pCaptureThread;
 			m_pCaptureThread = nullptr;
-			AfxMessageBox(_T("Capture stopped."));
 		}
 		else
 		{
@@ -339,19 +338,6 @@ void CPacketAnalsysv2Dlg::OnBnClickedStopButton()
 			// 스레드가 아직 종료되지 않았으면 UI 응답을 유지하면서 스레드가 종료되도록 대기
 			SetTimer(1, 500, nullptr); // 1번 타이머를 설정하여 일정 시간마다 종료 확인
 		}
-		//EnableWindow(FALSE); //UI 비활성화(중지 버튼 클릭 시 다른 입력 방지)
-
-		//WaitForSingleObject(m_pCaptureThread->m_hThread, INFINITE);	//스레드가 종료될 때까지 대기.
-
-		//// 스레드 종료 후 스레드 해제
-		//delete m_pCaptureThread;
-		//m_pCaptureThread = nullptr;
-
-		//// UI 다시 활성화
-		//EnableWindow(TRUE);
-
-		//// 사용자 알림
-		//AfxMessageBox(_T("Capture stopped."));
 	}
 }
 
